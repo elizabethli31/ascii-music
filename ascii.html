@@ -29,6 +29,7 @@
         test
       </h1>
       <button id="modeChanger">switch mode</button>
+      <button id="play">play</button>
     </body>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.5.0/p5.js"></script>
@@ -38,11 +39,10 @@
     <!-- functions -->
     <script>
     // const ascii = "#&%@!+*-"
-    // const ascii = ["some", "words", "to", "try"]
-    // const ascii = "A"
     let isDarkMode = false;
 
-    const ascii = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+    // const ascii = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+    const ascii = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4']
       
     function setup() {
       createCanvas(720,450);
@@ -51,7 +51,7 @@
       video.hide();
     }
     
-    let notes = Array(72).fill('A');
+    var notes = []
 
     function draw() {
       if (isDarkMode) {
@@ -90,25 +90,28 @@
           }
 
           fill(color);
-        //   let symbol = ascii.charAt(charIndex)
-            let symbol = ascii[charIndex]
+          let symbol = ascii[charIndex]
           text(symbol, i * w + w * 0.5, j * h + h * 0.5);
 
-          if (j == 15) {
-            notes[i] = symbol
+          if (notes.length >= 72) {
+            notes = []
           }
+          if (j == 15) {
+            if (symbol) {
+              notes.push(symbol);
+            } else {
+              notes.push('C')
+            }            
+          }
+          // if (j==15) {
+          //   console.log(notes)
+          // }
         }
       }
-    //   console.log(notes)
-    }
-
-    function play () {
-        
     }
       
     nn.get('#modeChanger').on('click', changeMode)
-    console.log(isDarkMode)
-      
+
     function changeMode() {
         isDarkMode = !isDarkMode;
         if (isDarkMode) {
@@ -117,5 +120,83 @@
             document.getElementsByTagName("body")[0].style.backgroundColor = "#ffffff"
         }
     }
+
+    let new_notes = notes.map((note) => note + "4")
+
+    /* music section */
+    const sampler = new Tone.Sampler({
+      urls: {
+        'A0': 'A0.mp3',
+        'C1': 'C1.mp3',
+        'D#1': 'Ds1.mp3',
+        'F#1': 'Fs1.mp3',
+        'A1': 'A1.mp3',
+        'C2': 'C2.mp3',
+        'D#2': 'Ds2.mp3',
+        'F#2': 'Fs2.mp3',
+        'A2': 'A2.mp3',
+        'C3': 'C3.mp3',
+        'D#3': 'Ds3.mp3',
+        'F#3': 'Fs3.mp3',
+        'A3': 'A3.mp3',
+        'C4': 'C4.mp3',
+        'D#4': 'Ds4.mp3',
+        'F#4': 'Fs4.mp3',
+        'A4': 'A4.mp3',
+        'C5': 'C5.mp3',
+        'D#5': 'Ds5.mp3',
+        'F#5': 'Fs5.mp3',
+        'A5': 'A5.mp3',
+        'C6': 'C6.mp3',
+        'D#6': 'Ds6.mp3',
+        'F#6': 'Fs6.mp3',
+        'A6': 'A6.mp3',
+        'C7': 'C7.mp3',
+        'D#7': 'Ds7.mp3',
+        'F#7': 'Fs7.mp3',
+        'A7': 'A7.mp3',
+        'C8': 'C8.mp3',
+      },
+      release: 1,
+      baseUrl: "https://tonejs.github.io/audio/salamander/"
+    }).toDestination()
+
+  const state = {
+    step: 0,
+    totalSteps: 72
+  }
+
+  function play (time) {
+  // wait for sampler buffers to be loaded
+    if (sampler.loaded === false) {
+      nn.get('#play').content('...loading...')
+      return // exit the function
+    } else {
+      nn.get('#play').content('stop')
+    }
     
-    </script>
+    // get current step && bar index
+    const s = state.step % state.totalSteps
+    // console.log(s)
+    if (notes.length > 0) {
+      var note = notes[s]
+      console.log(note)
+      sampler.triggerAttackRelease(note, '8n', time)
+      state.step++
+    }
+  }
+
+  async function start() {
+    if (Tone.Transport.state === 'started') {
+      Tone.Transport.stop()
+      nn.get('#play').content('start')
+    } else {
+      Tone.Transport.start()
+      nn.get('#play').content('stop')
+    }
+  }
+
+  Tone.Transport.scheduleRepeat(time => play(time), '8n')
+  nn.get('#play').on('click', start)
+    
+</script>
