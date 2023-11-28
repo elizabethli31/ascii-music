@@ -1,8 +1,7 @@
-// const ascii = "#&%@!+*-"
+const ascii = "#&%!*+-"
 let isDarkMode = false;
 
-// const ascii = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
-const ascii = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4']
+const notes_arr = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
   
 function setup() {
   createCanvas(720,450);
@@ -11,7 +10,11 @@ function setup() {
   video.hide();
 }
 
-var notes = []
+let notes = new Array(72)
+
+var sharedData = [1]
+
+let s = 0 
 
 function draw() {
   if (isDarkMode) {
@@ -43,29 +46,26 @@ function draw() {
       
       textAlign(CENTER,CENTER);
     
-      if (j == 15) {
-        color = 'red'
+      if (j == 15 && i == s) {
+        color = 'blue'
+      } else if (j == 15) {
+        color = 'red' 
       } else {
         color = 'black'
       }
 
       fill(color);
       let symbol = ascii[charIndex]
+      let note = notes_arr[charIndex]
       text(symbol, i * w + w * 0.5, j * h + h * 0.5);
 
-      if (notes.length >= 72) {
-        notes = []
-      }
       if (j == 15) {
-        if (symbol) {
-          notes.push(symbol);
+        if (note) {
+          notes[i] = note + "4";
         } else {
-          notes.push('C')
+          notes[i] = "C4";
         }            
       }
-      // if (j==15) {
-      //   console.log(notes)
-      // }
     }
   }
 }
@@ -127,33 +127,30 @@ totalSteps: 72
 }
 
 function play (time) {
-// wait for sampler buffers to be loaded
-if (sampler.loaded === false) {
-  nn.get('#play').content('...loading...')
-  return // exit the function
-} else {
-  nn.get('#play').content('stop')
-}
+    if (sampler.loaded === false) {
+        nn.get('#play').content('...loading...')
+        return 
+    } else {
+        nn.get('#play').content('stop')
+    }
 
-// get current step && bar index
-const s = state.step % state.totalSteps
-// console.log(s)
-if (notes.length > 0) {
-  var note = notes[s]
-  console.log(note)
-  sampler.triggerAttackRelease(note, '8n', time)
-  state.step++
-}
+    // get current step && bar index
+    s = state.step % state.totalSteps
+    if (notes.length > 0) {
+        var note = notes[s]
+        sampler.triggerAttackRelease(note, '8n', time)
+        state.step++
+    }
 }
 
 async function start() {
-if (Tone.Transport.state === 'started') {
-  Tone.Transport.stop()
-  nn.get('#play').content('start')
-} else {
-  Tone.Transport.start()
-  nn.get('#play').content('stop')
-}
+    if (Tone.Transport.state === 'started') {
+        Tone.Transport.stop()
+        nn.get('#play').content('start')
+    } else {
+        Tone.Transport.start()
+        nn.get('#play').content('stop')
+    }
 }
 
 Tone.Transport.scheduleRepeat(time => play(time), '8n')
