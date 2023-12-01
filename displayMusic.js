@@ -65,7 +65,7 @@ function draw() {
             let coordX = i * w + w * 0.5
             let coordY = j * h + h * 0.5
 
-            let ySelect = floor(map(mouseY, 0, windowHeight, 0, 62))
+            let ySelect = floor(map(mouseY, 0, windowHeight, 0, 30))
 
             if (j == ySelect && i == s
                 || (ySelect <= 0 && j == 0 && i == s)
@@ -185,6 +185,9 @@ function play (time) {
 }
 
 async function start() {
+    if (Tone.context.state !== "running") {
+        Tone.context.resume();
+    }
     if (Tone.Transport.state === 'started') {
         Tone.Transport.stop()
         nn.get('#play').content('play')
