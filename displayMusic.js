@@ -1,73 +1,103 @@
-const ascii = "#&%!*+-"
-let isDarkMode = false;
+const displayAscii = "#&%!*+-"
+const displayNotes = "ABCDEFG"
 
-const notes_arr = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+let isDarkMode = false;
+let ascii = displayAscii
+let notesArr = displayNotes
   
 function setup() {
-  createCanvas(720,450);
-  video = createCapture(VIDEO);
-  video.size(72,45);
-  video.hide();
+    var canvas = createCanvas(800,498);
+    canvas.parent("canvas")
+    video = createCapture(VIDEO);
+    video.size(80,50);
+    video.hide();
 }
 
-let notes = new Array(72)
+let notes = new Array(80)
 
 var sharedData = [1]
 
 let s = 0 
+let b = 0
 
 function draw() {
-  if (isDarkMode) {
-    background(0); // Dark background
-    color = 'white';
-  } else {
-    background(255); // Light background
-    color = 'black';
-  }
-  
-  let w = width / video.width;
-  let h = width / video.height;
-  video.loadPixels();
+    if (isDarkMode) {
+        background(0); // Dark background
+        color = 'white';
+        document.body.style.color = "#ffffff"
 
-  let j;
-  let i;
-  for (j = 0; j < video.height; j++) {
-    for (i = 0; i < video.width; i++) {
-      const pixelIndex = (video.width -i + 1 + (j * video.width)) * 4;
-      const r = video.pixels[pixelIndex + 0];
-      const g = video.pixels[pixelIndex + 1];
-      const b = video.pixels[pixelIndex + 2];
-      const avg = (r + g + b) / 3;
-      
-      fill(avg);
+        let buttons = document.querySelectorAll("button") 
+        buttons.forEach((button) => {
+            button.style.color = "#ffffff"
+        })
+    } else {
+        background(255); // Light background
+        color = 'black';
+        document.body.style.color = "#030303"
 
-      const len = ascii.length;
-      const charIndex = floor(map(avg, 0, 255, 0, len));
-      
-      textAlign(CENTER,CENTER);
-    
-      if (j == 15 && i == s) {
-        color = 'blue'
-      } else if (j == 15) {
-        color = 'red' 
-      } else {
-        color = 'black'
-      }
-
-      fill(color);
-      let symbol = ascii[charIndex]
-      let note = notes_arr[charIndex]
-      text(symbol, i * w + w * 0.5, j * h + h * 0.5);
-
-      if (j == 15) {
-        if (note) {
-          notes[i] = note + "4";
-        } else {
-          notes[i] = "C4";
-        }            
-      }
+        let buttons = document.querySelectorAll("button") 
+        buttons.forEach((button) => {
+            button.style.color = "#030303"
+        })
     }
-  }
+  
+    let w = width / video.width;
+    let h = width / video.height;
+    video.loadPixels();
+
+    let j;
+    let i;
+    for (j = 0; j < video.height; j++) {
+        for (i = 0; i < video.width; i++) {
+            const pixelIndex = (video.width -i + 1 + (j * video.width)) * 4;
+            const r = video.pixels[pixelIndex + 0];
+            const g = video.pixels[pixelIndex + 1];
+            const b = video.pixels[pixelIndex + 2];
+            const avg = (r + g + b) / 3;
+            
+            fill(avg);
+
+            const len = ascii.length;
+            const charIndex = floor(map(avg, 0, 255, 0, len));
+            
+            textAlign(CENTER,CENTER);
+            
+            let coordX = i * w + w * 0.5
+            let coordY = j * h + h * 0.5
+
+            let ySelect = floor(map(mouseY, 0, windowHeight, 0, 62))
+
+            if (j == ySelect && i == s
+                || (ySelect <= 0 && j == 0 && i == s)
+                || (ySelect >= 30 && j == 30 && i == s)) {
+                color = 'blue'
+            } else if (j == ySelect 
+                || ySelect <= 0 && j == 0
+                || ySelect >= 30 && j == 30) {
+                color = 'red' 
+            } else if (isDarkMode) {
+                color = 'white'
+            } else {
+                color = 'black'
+            }   
+     
+            fill(color)
+            textSize(12)
+            let symbol = ascii[charIndex]
+            let note = notesArr[charIndex]
+
+            text(symbol, coordX, coordY);
+            
+
+            if (j == ySelect) {
+                if (note) {
+                notes[i] = note + "4";
+                } else {
+                notes[i] = "C4";
+                }            
+            } 
+        }
+    }
 }
   
 nn.get('#modeChanger').on('click', changeMode)
@@ -76,8 +106,12 @@ function changeMode() {
     isDarkMode = !isDarkMode;
     if (isDarkMode) {
         document.getElementsByTagName("body")[0].style.backgroundColor = "#000000"
+        ascii = displayAscii.split('').reverse().join('')
+        notesArr = displayNotes.split('').reverse().join('')
     } else {
         document.getElementsByTagName("body")[0].style.backgroundColor = "#ffffff"
+        ascii = displayAscii
+        notesArr = displayNotes
     }
 }
 
@@ -122,8 +156,9 @@ const sampler = new Tone.Sampler({
 }).toDestination()
 
 const state = {
-step: 0,
-totalSteps: 72
+    step: 0,
+    totalSteps: 80,
+    chordBars: 10
 }
 
 function play (time) {
@@ -131,11 +166,17 @@ function play (time) {
         nn.get('#play').content('...loading...')
         return 
     } else {
-        nn.get('#play').content('stop')
+        nn.get('#play').content('pause')
     }
 
-    // get current step && bar index
     s = state.step % state.totalSteps
+    // b = state.step % state.chordBars
+
+    // if (b == 0) {
+    //     const chord = ['C4', 'E4', 'G4']
+    //     sampler.triggerAttackRelease(chord, '1n', time)
+    // }
+
     if (notes.length > 0) {
         var note = notes[s]
         sampler.triggerAttackRelease(note, '8n', time)
@@ -146,10 +187,10 @@ function play (time) {
 async function start() {
     if (Tone.Transport.state === 'started') {
         Tone.Transport.stop()
-        nn.get('#play').content('start')
+        nn.get('#play').content('play')
     } else {
         Tone.Transport.start()
-        nn.get('#play').content('stop')
+        nn.get('#play').content('pause')
     }
 }
 
