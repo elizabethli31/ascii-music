@@ -65,7 +65,7 @@ function draw() {
             let coordX = i * w + w * 0.5
             let coordY = j * h + h * 0.5
 
-            let ySelect = floor(map(mouseY, 0, windowHeight, 0, 30))
+            let ySelect = floor(map(mouseY, 0, windowHeight, 0, 50))
 
             if (j == ySelect && i == s
                 || (ySelect <= 0 && j == 0 && i == s)
@@ -170,12 +170,6 @@ function play (time) {
     }
 
     s = state.step % state.totalSteps
-    // b = state.step % state.chordBars
-
-    // if (b == 0) {
-    //     const chord = ['C4', 'E4', 'G4']
-    //     sampler.triggerAttackRelease(chord, '1n', time)
-    // }
 
     if (notes.length > 0) {
         var note = notes[s]
