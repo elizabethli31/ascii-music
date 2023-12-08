@@ -13,12 +13,14 @@ var scales = {
 }
 
 var keys = ["C", "G", "D", "A", "E", "B", "F#", "C#"]
+let octaves = "1234567"
 
 let isDarkMode = false;
 let ascii = displayAscii
 let key = keys[Math.floor(Math.random()*keys.length)]
 let notesArr = scales[key]
 Tone.Transport.bpm.value = 90
+let octave = "4"
 
 let chords = [['C4', 'E4', 'G4']
             ,['C4', 'E4', 'G4']
@@ -39,6 +41,13 @@ function randomBPM() {
     nn.get('#BPM').content(bpm)
 }
 
+function randomOctave() {
+    let octaveIdx = Math.floor(Math.random()*octaves.length)
+    octave = octaves[octaveIdx]
+    let visualSymbol = displayAscii[octaveIdx]
+    nn.get("#asciiKey").content(visualSymbol)
+}
+
 function setup() {
     var canvas = createCanvas(800,498);
     canvas.parent("canvas")
@@ -53,6 +62,7 @@ var sharedData = [1]
 
 let s = 0 
 let b = 0
+let c = 0
 
 function draw() {
     if (isDarkMode) {
@@ -103,7 +113,8 @@ function draw() {
 
             if (j == ySelect && i == s
                 || (ySelect <= 0 && j == 0 && i == s)
-                || (ySelect >= 30 && j == 30 && i == s)) {
+                || (ySelect >= 30 && j == 30 && i == s)
+                || (i == c && (j == 5 || j == 15 || j == 25))) {
                 color = 'blue'
             } else if (j == ySelect 
                 || ySelect <= 0 && j == 0
@@ -124,27 +135,32 @@ function draw() {
 
             if (j == ySelect) {
                 if (note) {
-                notes[i] = note + "4";
+                notes[i] = note + octave;
                 } else {
-                notes[i] = "C4";
+                notes[i] = "C" + octave;
                 }            
             } 
 
-            // if (i==0 || (i+1) %16 == 0) {
-            //     let bar = 5 - (i+1)/16 
-            //         if (j == 5) {
-            //             chords[bar][0] = note + "4"
-            //         } else if (j == 15) {
-            //             chords[bar][1] = note + "4"
-            //         } else if (j == 25) {
-            //             chords[bar][2] = note + "4"
-            //         }
-            // }
+            if ((i==0 || (i+1)%16 == 0) && i < 80) {
+                let bar = 0
+                if ((i+1)%16 == 0) {
+                    bar = 5 - (i+1)/16
+                }
+                if (!note) {
+                    note = "C"
+                }
+                    if (j == 5) {
+                        // console.log(chords[bar][0])
+                        chords[bar][0] = note + octave
+                    } else if (j == 15) {
+                        chords[bar][1] = note + octave
+                    } else if (j == 25) {
+                        chords[bar][2] = note + octave
+                    }
+            }
         }
     }
 }
-  
-nn.get('#modeChanger').on('click', changeMode)
 
 function changeMode() {
     isDarkMode = !isDarkMode;
@@ -158,8 +174,6 @@ function changeMode() {
         notesArr = displayNotes
     }
 }
-
-let new_notes = notes.map((note) => note + "4")
 
 /* music section */
 const sampler = new Tone.Sampler({
@@ -199,11 +213,10 @@ const sampler = new Tone.Sampler({
   baseUrl: "https://tonejs.github.io/audio/salamander/"
 }).toDestination()
 
-
 const state = {
     step: 0,
     totalSteps: 80,
-    chordBars: 10
+    chordBars: 16
 }
 
 function play (time) {
@@ -215,12 +228,17 @@ function play (time) {
     }
 
     s = state.step % state.totalSteps
-    // b = state.step % state.chordBars
+    b = state.step % state.chordBars
 
-    // if (b == 0) {
-    //     const chord = ['C4', 'E4', 'G4']
-    //     sampler.triggerAttackRelease(chord, '1n', time)
-    // }
+    if (b == 0) {
+        let chordNum = 0
+        if (s != 0) {
+            chordNum = 5 - s/16
+        }
+        let chord = chords[chordNum]
+        c = s
+        sampler.triggerAttackRelease(chord, '1n', time)
+    }
 
     if (notes.length > 0) {
         var note = notes[s]
@@ -242,7 +260,21 @@ async function start() {
     }
 }
 
+function showPopup() {
+    var popup = document.getElementById('popup');
+    if (popup.style.display === 'none') {
+        popup.style.display = 'block';
+        popup.style.animation = "fadeIn 1s"
+    } else {
+        popup.style.display = 'none';
+        popup.style.animation = "fadeOut 1s"
+    }
+}
+
 Tone.Transport.scheduleRepeat(time => play(time), '8n')
 nn.get('#play').on('click', start)
 nn.get('#randomKey').on('click', randomKey)
 nn.get('#BPM').on('click', randomBPM)
+nn.get('#modeChanger').on('click', changeMode)
+nn.get("#asciiKey").on('click', randomOctave)
+nn.get("#info").on('click', showPopup)

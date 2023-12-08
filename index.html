@@ -5,11 +5,28 @@
     ascii machine
   </h1>
   <p>move & make music !</p>
-  <div id="canvas"></div>
+  <div id="canvas">
+    <div id="popup">
+      <br></br><br></br><br></br>
+      <h3>an exploration of sounds, randomness, and visuals</h3>
+      (how to use)
+      <br></br>
+      <br></br>
+      - move around to generate note orderings
+      <br></br>
+      - hover your mouse to select a line to play
+      <br></br>
+      - click on the rightmost buttons to randomize (octave, bpm, key)
+      <br></br>
+      - switch mode to invert note order
+    </div>
+  </div>
   <button id="play">play</button>
   <button id="modeChanger">switch mode</button>
-  <button id="randomKey">A</button>
-  <button id="BPM">90</button>
+  <button id="info" style="float: right; width: 25">i</button>
+  <button id="randomKey" style="float: right; width: 30">A</button>
+  <button id="BPM" style="float: right;  width: 40">90</button>
+  <button id="asciiKey" style="float: right; width: 30">%</button>
 </body>
     
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.5.0/p5.js"></script>
