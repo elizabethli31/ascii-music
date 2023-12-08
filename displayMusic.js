@@ -1,10 +1,44 @@
 const displayAscii = "#&%!*+-"
 const displayNotes = "ABCDEFG"
 
+var scales = {
+    "C": ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+    "G": ['G', 'A', 'B', 'C', 'D', 'E', 'F#', 'G'],
+    "D": ['D', 'E', 'F#', 'G', 'A', 'B', 'C#', 'D'],
+    "A": ['A', 'B', 'C#', 'D', 'E', 'F#', 'G#', 'A'],
+    "E": ['E', 'F#', 'G#', 'A', 'B', 'C#', 'D#', 'E'],
+    "B": ['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#', 'B'],
+    "F#": ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'E#', 'F#'],
+    "C#": ['C#', 'D#', 'E#', 'F#', 'G#', 'A#', 'B#', 'C#']
+}
+
+var keys = ["C", "G", "D", "A", "E", "B", "F#", "C#"]
+
 let isDarkMode = false;
 let ascii = displayAscii
-let notesArr = displayNotes
+let key = keys[Math.floor(Math.random()*keys.length)]
+let notesArr = scales[key]
+Tone.Transport.bpm.value = 90
+
+let chords = [['C4', 'E4', 'G4']
+            ,['C4', 'E4', 'G4']
+            ,['C4', 'E4', 'G4']
+            ,['C4', 'E4', 'G4']
+            ,['C4', 'E4', 'G4']]
+
+function randomKey() {
+    key = keys[Math.floor(Math.random()*keys.length)]
+    notesArr = scales[key]
+    nn.get('#randomKey').content(key)
+}
   
+function randomBPM() { 
+    const tempo = { min: 90, max: 140 }
+    let bpm = nn.randomInt(tempo.min, tempo.max)
+    Tone.Transport.bpm.value = bpm
+    nn.get('#BPM').content(bpm)
+}
+
 function setup() {
     var canvas = createCanvas(800,498);
     canvas.parent("canvas")
@@ -87,7 +121,6 @@ function draw() {
             let note = notesArr[charIndex]
 
             text(symbol, coordX, coordY);
-            
 
             if (j == ySelect) {
                 if (note) {
@@ -96,6 +129,17 @@ function draw() {
                 notes[i] = "C4";
                 }            
             } 
+
+            // if (i==0 || (i+1) %16 == 0) {
+            //     let bar = 5 - (i+1)/16 
+            //         if (j == 5) {
+            //             chords[bar][0] = note + "4"
+            //         } else if (j == 15) {
+            //             chords[bar][1] = note + "4"
+            //         } else if (j == 25) {
+            //             chords[bar][2] = note + "4"
+            //         }
+            // }
         }
     }
 }
@@ -155,6 +199,7 @@ const sampler = new Tone.Sampler({
   baseUrl: "https://tonejs.github.io/audio/salamander/"
 }).toDestination()
 
+
 const state = {
     step: 0,
     totalSteps: 80,
@@ -163,13 +208,19 @@ const state = {
 
 function play (time) {
     if (sampler.loaded === false) {
-        nn.get('#play').content('...loading...')
+        nn.get('#play').content('play')
         return 
     } else {
         nn.get('#play').content('pause')
     }
 
     s = state.step % state.totalSteps
+    // b = state.step % state.chordBars
+
+    // if (b == 0) {
+    //     const chord = ['C4', 'E4', 'G4']
+    //     sampler.triggerAttackRelease(chord, '1n', time)
+    // }
 
     if (notes.length > 0) {
         var note = notes[s]
@@ -193,3 +244,5 @@ async function start() {
 
 Tone.Transport.scheduleRepeat(time => play(time), '8n')
 nn.get('#play').on('click', start)
+nn.get('#randomKey').on('click', randomKey)
+nn.get('#BPM').on('click', randomBPM)
